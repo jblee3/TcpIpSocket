@@ -11,11 +11,11 @@ void error_handling(char *message);
 int main(int argc, char *argv[]){
     int serv_sock;
     char message[BUF_SIZE];
-    int str_len;
+    int str_len, i;
 
-    struct sockaddr_in serv_addr;
-    struct sockaddr_in clnt_addr;
-    socklen_t clnt_addr_size;
+    struct sockaddr_in my_addr;
+    struct sockaddr_in your_addr;
+    socklen_t your_addr_size;
 
     if(argc != 2){
         printf("Usage : %s <port>\n", argv[0]);
@@ -26,23 +26,22 @@ int main(int argc, char *argv[]){
     if(serv_sock == -1)
         error_handling("UDP socket() error");
 
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(atoi(argv[1]));
+    memset(&my_addr, 0, sizeof(my_addr));
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    my_addr.sin_port = htons(atoi(argv[1]));
 
-    if(bind(serv_sock, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) == -1)
+    if(bind(serv_sock, (struct sockaddr*) &my_addr, sizeof(my_addr)) == -1)
         error_handling("bind() error");
 
-    while(1)
+    for(i=0; i<3; i++)
     {
-        clnt_addr_size = sizeof(clnt_addr);
+        sleep(5);
+        your_addr_size = sizeof(your_addr);
         str_len = recvfrom(serv_sock, message, BUF_SIZE, 0,
-                    (struct sockaddr*)&clnt_addr, &clnt_addr_size);
+                    (struct sockaddr*)&your_addr, &your_addr_size);
 
-        sendto(serv_sock, message, str_len, 0,
-                    (struct sockaddr*)&clnt_addr, clnt_addr_size);
-        printf("send OK\n");
+        printf("Message %d: %s \n", i+1, message);
     }
     close(serv_sock);
     return 0;
